@@ -1,0 +1,83 @@
+import requests
+import yaml
+import json
+import argparse
+
+
+PATH = "new-trino-config-secret.yaml"
+TRINO_CONFIG_PATH = "https://raw.githubusercontent.com/AICoE/internal-data-hub/main/kfdefs/base/trino/trino-config-secret.yaml"
+
+
+def check_match(element, name, user_type, resource_name):
+    if element.get(user_type, None) == name and element.get('schema', None) == resource_name:
+        return True
+    return False
+
+
+def get_trino_config():
+    trino_config_secret = requests.get(TRINO_CONFIG_PATH)
+    trino_config = yaml.safe_load(trino_config_secret.text)
+
+    return trino_config
+
+
+def edit_acl(acl, action, type, name, user_type, resource_name, allow, privileges):
+    match action:
+        case 'create':
+            return (create_in_acl(acl, type, name, user_type, resource_name, allow, privileges))
+        case 'update':
+            return (update_acl(acl, type, name, user_type, resource_name, allow))
+        case 'delete':
+            return (delete_from_acl(acl, type, name, user_type, resource_name))
+
+
+def create_in_acl(acl, type, name, user_type, resource_name, allow, privileges):
+    elements = acl.get(type)
+    match type:
+        case 'catalogs':
+            elements.insert(-1, {user_type: name, 'allow': allow})
+        case 'schemas':
+            if name is None:
+                elements.insert(-1, {'schema': resource_name, 'owner': True})
+            else:
+                elements.insert(-1, {user_type: name, 'schema': resource_name, 'owner': True})
+        case 'tables':
+            elements.insert(-1, {user_type: name, 'schema': resource_name, 'privileges': privileges})
+    acl[type] = elements
+    return acl
+
+
+def update_acl(acl, type, name, user_type, resource_name, allow):
+    print('This still needs to be implemented')
+    return acl
+
+
+def delete_from_acl(acl, type, name, user_type, resource_name):
+    elements = acl.get(type)
+    elements[:] = [element for element in elements if not check_match(element, name, user_type, resource_name)]
+    acl[type] = elements
+    return acl
+
+
+def write_to_file(acl, path):
+    with open(path, 'w') as file:
+        yaml.dump(acl, file)
+
+
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--action', '-a', choices=['create', 'update', 'delete'], required=True, help='The command to execute.')
+    parser.add_argument('--type', '-c', choices=['catalogs', 'schemas', 'tables'], required=True, help='The type of resource to execute the command on')
+    parser.add_argument('--user-type', '-u', choices=['user', 'group'], required=True, help='The user type.')
+    parser.add_argument('--name', '-n', default=None, help='The name of the user or the group in Trino.')
+    parser.add_argument('--resource-name', '-r', default=None, help='The resource name. It can be the catalog name, the schema name, or the table schema name.')
+    parser.add_argument('--allow', choices=['allow','read-only', 'none'], default='none')
+    parser.add_argument('--privileges', '-p', nargs='*', type=str, default=[], help="A list of privileges to be granted to the user/group for a given table")
+    args = parser.parse_args()
+
+    trino_config = get_trino_config()
+    acl = json.loads(trino_config.get('stringData').get('rules.json'))
+    acl = edit_acl(acl, args.action, args.type, args.name, args.user_type, args.resource_name, args.allow, args.privileges)
+    trino_config['stringData']['rules.json'] = json.dumps(acl)
+    
+    write_to_file(trino_config, PATH)
