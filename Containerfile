@@ -1,8 +1,8 @@
 FROM registry.fedoraproject.org/fedora-toolbox:35
 
-RUN dnf install -y python3-pip
+RUN dnf install -y gcc openldap-devel python3-devel python3-pip
 RUN pip install pipenv
-COPY Pipfile Pipfile.lock /usr/local/src/
+COPY Pipfile Pipfile.lock config.yaml /usr/local/src/
 
 WORKDIR /usr/local/src/
 RUN pipenv install --system --deploy

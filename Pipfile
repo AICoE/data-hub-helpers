@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 pyyaml = "*"
+python-ldap = "*"
 requests = "*"
 
 [dev-packages]
