@@ -1,0 +1,40 @@
+ldap_server: ENC[AES256_GCM,data:okpDLIwZZD3YWhPu+7QRw/+e89HBOnwqTJdY,iv:H1U5LyaqgrNGLc2WOkHKIZw1P6Y2YhFDUwKOtmFXxT8=,tag:rOAuMhVkXc0ySisN/GrWvg==,type:str]
+preapprovals:
+    managers:
+    - ENC[AES256_GCM,data:XeYDoKyhIe4=,iv:vQXpQ9SuaeGtiM8bLkGpAdUZIvguk7sDcbaFuvFI1rA=,tag:hMC8trgkyp01285Xk9Qi1A==,type:str]
+    - ENC[AES256_GCM,data:9xbJBql+aEI=,iv:Yl7gwsCTTrgUIYV+t9nlKCnxSoFWnNeip640OQ7PvNg=,tag:4KE4d2W+fXTUDvDSZNFpHg==,type:str]
+    - ENC[AES256_GCM,data:oseZYhym,iv:qZureuMZjFQG7rliy1vTXmGAZgk9cloSIEF+DGDnGTg=,tag:dF3AGCAkfOFZPksCc8vfxA==,type:str]
+    - ENC[AES256_GCM,data:EaG91G6jZw==,iv:jf1eSkefrZ8hpKO5xSJrvgrlpOUFIs/o3JPy8fifNng=,tag:Vi+bTYqpUMRvyEmeh9azoA==,type:str]
+    - ENC[AES256_GCM,data:ooYIEoErBg==,iv:ZLK5l9IvApi0hE1vj2NTgL6FDDDG23u2cZqfJ4iOzw4=,tag:qXcls/0zgxLFm4eUuynuMQ==,type:str]
+    - ENC[AES256_GCM,data:4g9S4XPltA==,iv:JD6J3wAzViojT7efKy5o4ek0Iszda/f2+D7hjuRqgK4=,tag:c53abh/x0LDZG+yAMu+beA==,type:str]
+    groups:
+    - ENC[AES256_GCM,data:r3VvhUskim+cYilxz3I=,iv:ZaTMSW78CV7Ppgkm13UeNLzSon2cUcMQ/jFqvZFm4YY=,tag:UX8ECmAIoFuCP+G0QjFctQ==,type:str]
+    - ENC[AES256_GCM,data:vpU7WQCx+N9Z3KPFg/tHsYcheq3+Fpg=,iv:eDwaJwqxlktDIp6OAHLgNIL8FoirVHn0qs/rvZYT6kw=,tag:rVxSKzJejOJ28LAbTgvjLQ==,type:str]
+    - ENC[AES256_GCM,data:lxFdAk7jqPStHxmjppUhImtWUeelWn6iqQ==,iv:nR3fYWbKgbj/4ZSlxO9olRindRgZ2XUFk9JiLvmDcdE=,tag:Dz+piYtFt1KtvUmUqCbCzg==,type:str]
+    projects:
+    - ENC[AES256_GCM,data:MZQuHru32f8=,iv:T0jHLpuFIx+QGlvBz1QtHe4DBe64Pf0V4VDVTdvlZps=,tag:PRfM7gc1B9jz2uspeUG3ww==,type:str]
+    - ENC[AES256_GCM,data:oEfe,iv:nEabBAq+aFPJJ7P91Y4Tc+OiDLIdXc3VtbTMPPzIjug=,tag:zIQVj/2s7AstWZCnf2I4wQ==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    lastmodified: '2021-12-13T17:57:38Z'
+    mac: ENC[AES256_GCM,data:2lPX5eTyW5Htoe1b5ts0e/KYXoH9VQRU1LyBge+6d85qv0o0CT3WLWbnh0/5CqPPZSAsOe6raLgI6XfHfGmt3/D2479P0lMRgMWKcMk2IK4WnQaBF0veolh5CawAoSxM/F6Obe10jNZl9Gn964L9vap/zrQcJp5SJL0dITB1KeI=,iv:KbHlX/85VVx7sR790LwHAobrPbkgr79YFQ8/vBHxPWc=,tag:pmxfmNrMViUt7maaYoDvCA==,type:str]
+    pgp:
+    -   created_at: '2021-12-13T17:57:37Z'
+        enc: |
+            -----BEGIN PGP MESSAGE-----
+
+            hQEMA/irrHa183bxAQf8C1OKeuD1P2x/vlMjPE9g/c6+RtI9nU9j+OHQ0owP00/D
+            xDz0vXRR9enzh/TSb4dsrYoFJPkB+BLQAYE5lOnA3y0LOf6PFAtOiy3kdxhhvngC
+            kk1Ywi7UEDmL1up6vfsASGaKYSrs+Zb2TgtUqgB3tLbsae6OfN8m7njyJyOyf8oG
+            /xtQnFAaXfYyOmQ7eOIBIW7D5snfI+P6IJ4O7Nxvo1hBbRjqYDNkyhlOibHKITmx
+            goBDc/dAkxidVdcnd74IzXOkU1kgGs9fZ9FMKS8eP2vBO3viS2BdSPoucT404RSy
+            DabNPuLegnEvAtvcb/MLJxGEngAZfsYPSy6qk8DSMtJeAbu+ApRXGMqbIoWSR0PF
+            71qjJ9AVGOOOv8LGwVkBFbyYLtSGA/AIdjsrsWv9gvv/bg8ryMCRUMtlvi9lzqcu
+            VOlIxaxqx0pVHnTzKujvf9lu4x60oyM2mEZqAxY15g==
+            =Ebgq
+            -----END PGP MESSAGE-----
+        fp: EFDB9AFBD18936D9AB6B2EECBD2C73FF891FBC7E
+    unencrypted_suffix: _unencrypted
+    version: 3.5.0
