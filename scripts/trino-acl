@@ -23,14 +23,15 @@ def get_trino_config():
     return trino_config
 
 
-def edit_acl(acl, action, type, name, user_type, resource_name, allow, privileges):
-    match action:
+def edit_acl(acl, args):
+    match args.action:
         case 'create':
-            return (create_in_acl(acl, type, name, user_type, resource_name, allow, privileges))
+            return (create_in_acl(acl, args.type, args.name, args.user_type, args.resource_name, args.allow, args.privileges))
         case 'update':
-            return (update_acl(acl, type, name, user_type, resource_name, allow))
+            return (update_acl(acl, args.type, args.search_field, args.search_field_value, 
+            args.update_field, args.update_field_value, args.update_field_replacement))
         case 'delete':
-            return (delete_from_acl(acl, type, name, user_type, resource_name))
+            return (delete_from_acl(acl, args.type, args.name, args.user_type, args.resource_name))
 
 
 def create_in_acl(acl, type, name, user_type, resource_name, allow, privileges):
@@ -49,8 +50,20 @@ def create_in_acl(acl, type, name, user_type, resource_name, allow, privileges):
     return acl
 
 
-def update_acl(acl, type, name, user_type, resource_name, allow):
-    print('This still needs to be implemented')
+def update_acl(acl, type, search_field, search_field_value, update_field, update_field_value, update_field_replacement):
+    try:
+        acl_type = acl[type]
+        acl_entry = [d for d in acl_type if d.get(search_field, "") == search_field_value][0]
+        user_group_list = acl_entry[update_field].split("|")
+        if(update_field_value):
+            user_group_list.remove(update_field_value)
+        user_group_list.append(update_field_replacement)
+        user_group_list_str = "|".join(user_group_list)
+        acl_entry[update_field] = user_group_list_str
+        acl_type_updated = [d if d.get(search_field, "") != search_field_value else acl_entry for d in acl_type] 
+        acl[type] = acl_type_updated
+    except:
+        print("No matching element for the description")
     return acl
 
 
@@ -63,23 +76,40 @@ def delete_from_acl(acl, type, name, user_type, resource_name):
 
 def write_to_file(acl, path):
     with open(path, 'w') as file:
-        yaml.dump(acl, file)
+        yaml.dump(acl)
 
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--action', '-a', choices=['create', 'update', 'delete'], required=True, help='The command to execute.')
     parser.add_argument('--type', '-c', choices=['catalogs', 'schemas', 'tables'], required=True, help='The type of resource to execute the command on')
-    parser.add_argument('--user-type', '-u', choices=['user', 'group'], required=True, help='The user type.')
+    parser.add_argument('--user-type', '-u', choices=['user', 'group'], help='The user type.')
+    parser.add_argument('--resource-name', '-r', default=None, help='The resource name. It can be the catalog name, the schema name, or the table schema name, and in updates users & groups.')
     parser.add_argument('--name', '-n', default=None, help='The name of the user or the group in Trino.')
-    parser.add_argument('--resource-name', '-r', default=None, help='The resource name. It can be the catalog name, the schema name, or the table schema name.')
     parser.add_argument('--allow', choices=['allow','read-only', 'none'], default='none')
     parser.add_argument('--privileges', '-p', nargs='*', type=str, default=[], help="A list of privileges to be granted to the user/group for a given table")
+    parser.add_argument('--search-field', '-f', choices=['user', 'group', 'schema'], default=None, help='Field to select the targeted resource')
+    parser.add_argument('--search-field-value', '-s', default=None, help='Value of the field of the resource we want to get')
+    parser.add_argument('--update-field', '-g', choices=['user', 'group', 'schema'], default=None, help='Field to update the value of the resource')
+    parser.add_argument('--update-field-value', '-v', default='', help='Value we want to update, if empty it will append a new value')
+    parser.add_argument('--update-field-replacement', '-t', default='', help='New value of the resource, if empty, it will delete the update-field-value')
+    
     args = parser.parse_args()
+
+    if ((args.action == "create" or args.action == "delete") and args.user_type is None ):
+        parser.error("the following arguments are required: --user-type/-u")
+
+    if (args.action == "update" and (args.search_field is None or args.search_field_value is None 
+        or args.update_field is None)):
+        parser.error("--action update requires search-field, search-field-value, update-field, update-field-value and update-field-replacement")
+
+    if (args.action == "update" and args.update_field_value == '' and args.update_field_replacement == ''):
+        parser.error("--action update requires either update-field-value, update-field-replacement or both")
+    
 
     trino_config = get_trino_config()
     acl = json.loads(trino_config.get('stringData').get('rules.json'))
-    acl = edit_acl(acl, args.action, args.type, args.name, args.user_type, args.resource_name, args.allow, args.privileges)
+    acl = edit_acl(acl, args)
     trino_config['stringData']['rules.json'] = json.dumps(acl)
     
     write_to_file(trino_config, PATH)
