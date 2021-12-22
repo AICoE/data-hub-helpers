@@ -76,7 +76,7 @@ def delete_from_acl(acl, type, name, user_type, resource_name):
 
 def write_to_file(acl, path):
     with open(path, 'w') as file:
-        yaml.dump(acl)
+        yaml.dump(acl, file, default_style='|')
 
 
 if __name__=='__main__':
@@ -110,6 +110,6 @@ if __name__=='__main__':
     trino_config = get_trino_config()
     acl = json.loads(trino_config.get('stringData').get('rules.json'))
     acl = edit_acl(acl, args)
-    trino_config['stringData']['rules.json'] = json.dumps(acl)
+    trino_config['stringData']['rules.json'] = json.dumps(acl, sort_keys=True, indent=4)
     
     write_to_file(trino_config, PATH)
