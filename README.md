@@ -31,10 +31,10 @@ Example call: `approval-check <kerberos_id>`
 `trino-acl` downloads the latest acl file from github and modifies it according to the passed arguments.
 It writes to `new-trino-config-secret.yaml` in your current directory. This file can be used to raise a PR to the internal-data-hub repo. The script currently does not check for existing duplicate items, so be careful when adding new acl rules.
 
-Example create call: `trino-acl -a create -c schemas -u user -n test -r foo`
-Example delete call: `trino-acl -a delete -c tables -u group -n cost-management -r costmgmt`
-Example update call: `trino-acl -a update -c schemas -f schema -s jdbc  -g group -t new-group`
-Example update call: `trino-acl -a update -c tables -f schema -s telemetry  -g group -v grokket -t new-grokket`
+Example create call: `trino-acl --action create --type schemas --user-type user -n test --resource-name foo`
+Example delete call: `trino-acl --action delete --type tables --user-type group -n cost-management --resource-name costmgmt`
+Example update call: `trino-acl --action update --type schemas --search-field schema --search-field-value jdbc --update-field group --update-field-replacement new-group`
+Example update call: `trino-acl --action update --type tables --search-field schema --search-field-value telemetry --update-field group --update-field-value grokket --update-field-replacement new-grokket`
 
 For a full list of arguments, refer to the `--help` output
 

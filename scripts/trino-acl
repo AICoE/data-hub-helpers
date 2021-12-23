@@ -17,6 +17,11 @@ def check_match(element, name, user_type, resource_name):
 
 
 def get_trino_config():
+    """Get the trino config file from the given path and load a dictionary from the yaml
+
+    Returns:
+        dict: Dictionary with the info parsed from the yaml
+    """
     trino_config_secret = requests.get(TRINO_CONFIG_PATH)
     trino_config = yaml.safe_load(trino_config_secret.text)
 
@@ -24,6 +29,15 @@ def get_trino_config():
 
 
 def edit_acl(acl, args):
+    """Given the action parameter, call the method to create, update or delete a field in the trino configuration
+
+    Args:
+        acl (dict): Dictionary with the trino configuration
+        args (object): Argparse object with the current parameters
+
+    Returns:
+        dict: Modified trino configuration
+    """
     match args.action:
         case 'create':
             return (create_in_acl(acl, args.type, args.name, args.user_type, args.resource_name, args.allow, args.privileges))
@@ -35,6 +49,20 @@ def edit_acl(acl, args):
 
 
 def create_in_acl(acl, type, name, user_type, resource_name, allow, privileges):
+    """Create a new entry in the trino configuration file.
+
+    Args:
+        acl (dict): Dictionary with the info parsed from the trino's yaml configuration
+        type (str): The type of resource to execute the command on, could be catalogs, schemas or tables
+        name (str): The name of the user or the group in Trino
+        user_type (str): The user type, it could be either user or group
+        resource_name (str): The resource name. It can be the catalog name, the schema name or the table schema name
+        allow (str): Type of permission. It could be allow, read-only or none
+        privileges (str): A list of privileges to be granted to the user/group for a given table
+
+    Returns:
+        dict: Modified trino configuration
+    """
     elements = acl.get(type)
     match type:
         case 'catalogs':
@@ -51,6 +79,20 @@ def create_in_acl(acl, type, name, user_type, resource_name, allow, privileges):
 
 
 def update_acl(acl, type, search_field, search_field_value, update_field, update_field_value, update_field_replacement):
+    """Update an existing entry in the trino configuration file.
+
+    Args:
+        acl (dict): Dictionary with the info parsed from the trino's yaml configuration
+        type (str): The type of resource to execute the command on, could be catalogs, schemas or tables
+        search_field (str): Field to select the targeted resource
+        search_field_value (str): Value of the field of the resource we want to get
+        update_field (str): Field to update the value of the resource
+        update_field_value (str): Value we want to update, if empty it will append a new value
+        update_field_replacement (str): New value of the resource, if empty, it will delete the update-field-value
+
+    Returns:
+        dict: Modified trino configuration
+    """
     try:
         acl_type = acl[type]
         acl_entry = [d for d in acl_type if d.get(search_field, "") == search_field_value][0]
@@ -68,6 +110,18 @@ def update_acl(acl, type, search_field, search_field_value, update_field, update
 
 
 def delete_from_acl(acl, type, name, user_type, resource_name):
+    """Delete an entry in the trino configuration file
+
+    Args:
+        acl (dict): Dictionary with the info parsed from the trino's yaml configuration
+        type (str): The type of resource to execute the command on, could be catalogs, schemas or tables
+        name (str): The name of the user or the group in Trino
+        user_type (str): The user type, it could be either user or group
+        resource_name (str): The resource name. It can be the catalog name, the schema name or the table schema name
+
+    Returns:
+        dict: Modified trino configuration
+    """
     elements = acl.get(type)
     elements[:] = [element for element in elements if not check_match(element, name, user_type, resource_name)]
     acl[type] = elements
@@ -75,24 +129,32 @@ def delete_from_acl(acl, type, name, user_type, resource_name):
 
 
 def write_to_file(acl, path):
+    """Write the trino config dictionary into a new yml file given the file name
+
+    Args:
+        acl (dict): Dictionary with the trino configuration
+        path (str): Path and name of the file to write
+    """
     with open(path, 'w') as file:
         yaml.dump(acl, file, default_style='|')
 
 
 if __name__=='__main__':
+    """Parse the argument elements and call the functions to modify trino config
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--action', '-a', choices=['create', 'update', 'delete'], required=True, help='The command to execute.')
     parser.add_argument('--type', '-c', choices=['catalogs', 'schemas', 'tables'], required=True, help='The type of resource to execute the command on')
-    parser.add_argument('--user-type', '-u', choices=['user', 'group'], help='The user type.')
-    parser.add_argument('--resource-name', '-r', default=None, help='The resource name. It can be the catalog name, the schema name, or the table schema name, and in updates users & groups.')
-    parser.add_argument('--name', '-n', default=None, help='The name of the user or the group in Trino.')
-    parser.add_argument('--allow', choices=['allow','read-only', 'none'], default='none')
-    parser.add_argument('--privileges', '-p', nargs='*', type=str, default=[], help="A list of privileges to be granted to the user/group for a given table")
-    parser.add_argument('--search-field', '-f', choices=['user', 'group', 'schema'], default=None, help='Field to select the targeted resource')
-    parser.add_argument('--search-field-value', '-s', default=None, help='Value of the field of the resource we want to get')
-    parser.add_argument('--update-field', '-g', choices=['user', 'group', 'schema'], default=None, help='Field to update the value of the resource')
-    parser.add_argument('--update-field-value', '-v', default='', help='Value we want to update, if empty it will append a new value')
-    parser.add_argument('--update-field-replacement', '-t', default='', help='New value of the resource, if empty, it will delete the update-field-value')
+    parser.add_argument('--user-type', '-u', choices=['user', 'group'], help='[CREATE, DELETE] - The user type.')
+    parser.add_argument('--resource-name', '-r', default=None, help='[CREATE, DELETE] - The resource name. It can be the catalog name, the schema name, or the table schema name, and in updates users & groups.')
+    parser.add_argument('--name', '-n', default=None, help='[CREATE, DELETE] - The name of the user or the group in Trino.')
+    parser.add_argument('--allow', choices=['allow','read-only', 'none'], default='none', help='[CREATE, DELETE] - Type of permission.')
+    parser.add_argument('--privileges', '-p', nargs='*', type=str, default=[], help="[CREATE, DELETE] - A list of privileges to be granted to the user/group for a given table")
+    parser.add_argument('--search-field', '-f', choices=['user', 'group', 'schema'], default=None, help='[UPDATE] - Field to select the targeted resource')
+    parser.add_argument('--search-field-value', '-s', default=None, help='[UPDATE] - Value of the field of the resource we want to get')
+    parser.add_argument('--update-field', '-g', choices=['user', 'group', 'schema'], default=None, help='[UPDATE] - Field to update the value of the resource')
+    parser.add_argument('--update-field-value', '-v', default='', help='[UPDATE] - Value we want to update, if empty it will append a new value')
+    parser.add_argument('--update-field-replacement', '-t', default='', help='[UPDATE] - New value of the resource, if empty, it will delete the update-field-value')
     
     args = parser.parse_args()
 
