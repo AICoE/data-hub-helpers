@@ -1,0 +1,55 @@
+#!/usr/bin/python
+
+from trino import dbapi,auth
+import os
+
+TRINO_HOST = os.environ['TRINO_HOST'] if os.environ['TRINO_HOST'] else 'trino.datahub.redhat.com'
+TRINO_PORT = 443
+TRINO_USER = os.environ['TRINO_USER'] if os.environ['TRINO_USER'] else ''
+TRINO_PASS = os.environ['TRINO_PASS'] if os.environ['TRINO_PASS'] else ''
+
+def main():
+    conn = get_trino_connection()
+    
+    queries = get_slow_queries(conn)
+
+    for query in queries:
+        kill_query(conn, query[0])
+
+def get_trino_connection():
+    return dbapi.connect(
+        host=TRINO_HOST,
+        port=TRINO_PORT,
+        user=TRINO_USER,
+        http_scheme='https',
+        verify=False,
+        auth=auth.BasicAuthentication(TRINO_USER, TRINO_PASS),
+    )
+
+def get_slow_queries(conn):
+    sql = '''
+        SELECT
+            query_id
+        FROM
+            system.runtime.queries
+        WHERE
+            "state" = 'RUNNING' AND
+            "end" IS NULL AND
+            "started" <= (current_timestamp - interval '60' minute)'''
+
+    cur = conn.cursor()
+    cur.execute(sql)
+
+    return cur.fetchall()
+
+def kill_query(conn, query_id):
+    sql = '''
+        CALL system.runtime.kill_query('{}', 'Killed by slow query killer')
+    '''.format(query_id)
+
+    cur = conn.cursor()
+    cur.execute(sql)
+    cur.fetchone()
+
+if __name__ == '__main__':
+    main()
